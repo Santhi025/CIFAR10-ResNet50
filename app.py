@@ -107,13 +107,31 @@ st.markdown("""
 
 # ---------------- HEADER ----------------
 
+# st.markdown(
+#     '<p class="title">🧠 CIFAR-10 Image Classifier</p>',
+#     unsafe_allow_html=True
+# )
+
 st.markdown(
-    '<p class="title">🧠 CIFAR-10 Image Classifier</p>',
+    """
+    <h1 style='text-align:center; color:#4F46E5;'>
+        🧠 CIFAR-10 Image Classifier
+    </h1>
+    """,
     unsafe_allow_html=True
 )
 
+# st.markdown(
+#     '<p class="subtitle">Powered by ResNet50 and TensorFlow</p>',
+#     unsafe_allow_html=True
+# )
+
 st.markdown(
-    '<p class="subtitle">Powered by ResNet50 and TensorFlow</p>',
+    """
+    <p style='text-align:center; color:gray; font-size:1.1rem; margin-bottom:30px;'>
+        Powered by ResNet50 and TensorFlow
+    </p>
+    """,
     unsafe_allow_html=True
 )
 
