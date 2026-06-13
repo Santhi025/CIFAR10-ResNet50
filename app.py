@@ -272,6 +272,14 @@ if uploaded_file is not None:
 
 st.markdown("---")
 
-st.caption(
-    "Built with Streamlit • TensorFlow • ResNet50 • CIFAR-10"
+# st.caption(
+#     "Built with Streamlit • TensorFlow • ResNet50 • CIFAR-10"
+# )
+st.markdown(
+    """
+    <p style='text-align:center; color:gray; font-size:0.9rem;'>
+        Built with Streamlit • TensorFlow • ResNet50 • CIFAR-10
+    </p>
+    """,
+    unsafe_allow_html=True
 )
