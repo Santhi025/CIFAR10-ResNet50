@@ -1,185 +1,273 @@
 
+
+
 # import streamlit as st
 # import numpy as np
+# import pandas as pd
 # from PIL import Image
 # from tensorflow.keras.models import load_model
 # import os
 # import gdown
+
+# # ---------------- PAGE CONFIG ----------------
+
+# st.set_page_config(
+#     page_title="CIFAR-10 Classifier",
+#     page_icon="🧠",
+#     layout="wide"
+# )
+
+# # ---------------- CUSTOM CSS ----------------
+
+# st.markdown("""
+# <style>
+
+# .title {
+#     font-size: 3rem;
+#     font-weight: 700;
+#     text-align: center;
+#     background: linear-gradient(90deg,#00DBDE,#FC00FF);
+#     -webkit-background-clip: text;
+#     -webkit-text-fill-color: transparent;
+# }
+
+# .subtitle {
+#     text-align: center;
+#     color: gray;
+#     font-size: 1.1rem;
+#     margin-bottom: 30px;
+# }
+
+# .block-container {
+#     padding-top: 2rem;
+# }
+
+# </style>
+# """, unsafe_allow_html=True)
+
+# # ---------------- HEADER ----------------
+
+# # st.markdown(
+# #     '<p class="title">🧠 CIFAR-10 Image Classifier</p>',
+# #     unsafe_allow_html=True
+# # )
+
+# st.markdown(
+#     """
+#     <h1 style='text-align:center; color:#4F46E5;'>
+#         🧠 CIFAR-10 Image Classifier
+#     </h1>
+#     """,
+#     unsafe_allow_html=True
+# )
+
+# # st.markdown(
+# #     '<p class="subtitle">Powered by ResNet50 and TensorFlow</p>',
+# #     unsafe_allow_html=True
+# # )
+
+# st.markdown(
+#     """
+#     <p style='text-align:center; color:gray; font-size:1.1rem; margin-bottom:30px;'>
+#         Powered by ResNet50 and TensorFlow
+#     </p>
+#     """,
+#     unsafe_allow_html=True
+# )
+
+# # ---------------- SIDEBAR ----------------
+
+# with st.sidebar:
+#     st.header("📌 Project Information")
+
+#     st.write("""
+#     **Model:** ResNet50
+    
+#     **Dataset:** CIFAR-10
+    
+#     **Classes:**
+#     - ✈️ Airplane
+#     - 🚗 Automobile
+#     - 🐦 Bird
+#     - 🐱 Cat
+#     - 🦌 Deer
+#     - 🐶 Dog
+#     - 🐸 Frog
+#     - 🐴 Horse
+#     - 🚢 Ship
+#     - 🚚 Truck
+#     """)
+
+#     st.success("Model Ready")
+
+# # ---------------- MODEL ----------------
 
 # MODEL_FILE = "cifar10_resnet50.keras"
 # FILE_ID = "1z97EwgoxXl3JnbPrhQlrV0n0jbO4grwF"
 
 # @st.cache_resource
 # def get_model():
+
 #     if not os.path.exists(MODEL_FILE):
 #         url = f"https://drive.google.com/uc?id={FILE_ID}"
 #         gdown.download(url, MODEL_FILE, quiet=False)
 
 #     return load_model(MODEL_FILE)
 
-
-# with st.spinner("Loading model..."):
+# with st.spinner("Loading ResNet50 Model..."):
 #     model = get_model()
 
+# # ---------------- CLASSES ----------------
+
 # class_names = [
-#     'airplane',
-#     'automobile',
-#     'bird',
-#     'cat',
-#     'deer',
-#     'dog',
-#     'frog',
-#     'horse',
-#     'ship',
-#     'truck'
+#     "airplane",
+#     "automobile",
+#     "bird",
+#     "cat",
+#     "deer",
+#     "dog",
+#     "frog",
+#     "horse",
+#     "ship",
+#     "truck"
 # ]
 
-# st.title("CIFAR-10 Image Classifier")
+# # ---------------- FILE UPLOAD ----------------
 
 # uploaded_file = st.file_uploader(
-#     "Upload an Image",
+#     "📤 Upload an Image",
 #     type=["jpg", "jpeg", "png"]
 # )
+
+# # ---------------- PREDICTION ----------------
 
 # if uploaded_file is not None:
 
 #     image = Image.open(uploaded_file).convert("RGB")
 
-#     st.image(image, caption="Uploaded Image")
+#     resized_image = image.resize((32, 32))
 
-#     image = image.resize((32, 32))
-
-#     img_array = np.array(image) / 255.0
+#     img_array = np.array(resized_image) / 255.0
 #     img_array = np.expand_dims(img_array, axis=0)
 
-#     prediction = model.predict(img_array)
+#     with st.spinner("Predicting..."):
+#         prediction = model.predict(img_array, verbose=0)
 
-#     predicted_class = class_names[np.argmax(prediction)]
-#     confidence = np.max(prediction)
+#     predicted_index = np.argmax(prediction)
+#     predicted_class = class_names[predicted_index]
+#     confidence = float(np.max(prediction))
 
-#     st.success(f"Prediction: {predicted_class}")
-#     st.write(f"Confidence: {confidence:.2%}")
+#     col1, col2 = st.columns([1, 1])
+
+#     # IMAGE COLUMN
+#     with col1:
+#         st.subheader("🖼 Uploaded Image")
+#         st.image(
+#             image,
+#             caption="Input Image",
+#             use_container_width=True
+#         )
+
+#     # RESULT COLUMN
+#     with col2:
+#         st.subheader("🎯 Prediction Result")
+
+#         st.success(
+#             f"Predicted Class: {predicted_class.upper()}"
+#         )
+
+#         st.metric(
+#             label="Confidence",
+#             value=f"{confidence:.2%}"
+#         )
+
+#         st.progress(confidence)
+
+#         st.write("### 🏆 Top 3 Predictions")
+
+#         top3 = np.argsort(prediction[0])[-3:][::-1]
+
+#         for idx in top3:
+#             st.write(
+#                 f"**{class_names[idx].capitalize()}** : "
+#                 f"{prediction[0][idx]*100:.2f}%"
+#             )
+
+#     # CHART
+
+#     st.markdown("---")
+
+#     st.subheader("📊 Probability Distribution")
+
+#     df = pd.DataFrame({
+#         "Class": class_names,
+#         "Probability": prediction[0]
+#     })
+
+#     st.bar_chart(
+#         df.set_index("Class")
+#     )
+
+# # ---------------- FOOTER ----------------
+
+# st.markdown("---")
+
+# # st.caption(
+# #     "Built with Streamlit • TensorFlow • ResNet50 • CIFAR-10"
+# # )
+# st.markdown(
+#     """
+#     <p style='text-align:center; color:gray; font-size:0.9rem;'>
+#         Built with Streamlit • TensorFlow • ResNet50 • CIFAR-10
+#     </p>
+#     """,
+#     unsafe_allow_html=True
+# )
 
 
-import streamlit as st
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import os
+
+import gdown
 import numpy as np
 import pandas as pd
+import streamlit as st
 from PIL import Image
 from tensorflow.keras.models import load_model
-import os
-import gdown
 
-# ---------------- PAGE CONFIG ----------------
 
 st.set_page_config(
-    page_title="CIFAR-10 Classifier",
+    page_title="CIFAR-10 Vision Lab",
     page_icon="🧠",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
-
-# ---------------- CUSTOM CSS ----------------
-
-st.markdown("""
-<style>
-
-.title {
-    font-size: 3rem;
-    font-weight: 700;
-    text-align: center;
-    background: linear-gradient(90deg,#00DBDE,#FC00FF);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.subtitle {
-    text-align: center;
-    color: gray;
-    font-size: 1.1rem;
-    margin-bottom: 30px;
-}
-
-.block-container {
-    padding-top: 2rem;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-# ---------------- HEADER ----------------
-
-# st.markdown(
-#     '<p class="title">🧠 CIFAR-10 Image Classifier</p>',
-#     unsafe_allow_html=True
-# )
-
-st.markdown(
-    """
-    <h1 style='text-align:center; color:#4F46E5;'>
-        🧠 CIFAR-10 Image Classifier
-    </h1>
-    """,
-    unsafe_allow_html=True
-)
-
-# st.markdown(
-#     '<p class="subtitle">Powered by ResNet50 and TensorFlow</p>',
-#     unsafe_allow_html=True
-# )
-
-st.markdown(
-    """
-    <p style='text-align:center; color:gray; font-size:1.1rem; margin-bottom:30px;'>
-        Powered by ResNet50 and TensorFlow
-    </p>
-    """,
-    unsafe_allow_html=True
-)
-
-# ---------------- SIDEBAR ----------------
-
-with st.sidebar:
-    st.header("📌 Project Information")
-
-    st.write("""
-    **Model:** ResNet50
-    
-    **Dataset:** CIFAR-10
-    
-    **Classes:**
-    - ✈️ Airplane
-    - 🚗 Automobile
-    - 🐦 Bird
-    - 🐱 Cat
-    - 🦌 Deer
-    - 🐶 Dog
-    - 🐸 Frog
-    - 🐴 Horse
-    - 🚢 Ship
-    - 🚚 Truck
-    """)
-
-    st.success("Model Ready")
-
-# ---------------- MODEL ----------------
 
 MODEL_FILE = "cifar10_resnet50.keras"
 FILE_ID = "1z97EwgoxXl3JnbPrhQlrV0n0jbO4grwF"
 
-@st.cache_resource
-def get_model():
-
-    if not os.path.exists(MODEL_FILE):
-        url = f"https://drive.google.com/uc?id={FILE_ID}"
-        gdown.download(url, MODEL_FILE, quiet=False)
-
-    return load_model(MODEL_FILE)
-
-with st.spinner("Loading ResNet50 Model..."):
-    model = get_model()
-
-# ---------------- CLASSES ----------------
-
-class_names = [
+CLASS_NAMES = [
     "airplane",
     "automobile",
     "bird",
@@ -189,97 +277,328 @@ class_names = [
     "frog",
     "horse",
     "ship",
-    "truck"
+    "truck",
 ]
 
-# ---------------- FILE UPLOAD ----------------
+CLASS_ICONS = {
+    "airplane": "✈️",
+    "automobile": "🚗",
+    "bird": "🐦",
+    "cat": "🐱",
+    "deer": "🦌",
+    "dog": "🐶",
+    "frog": "🐸",
+    "horse": "🐴",
+    "ship": "🚢",
+    "truck": "🚚",
+}
 
-uploaded_file = st.file_uploader(
-    "📤 Upload an Image",
-    type=["jpg", "jpeg", "png"]
+
+st.markdown(
+    """
+    <style>
+    :root {
+        --surface: rgba(15, 23, 42, 0.78);
+        --surface-strong: rgba(15, 23, 42, 0.94);
+        --border: rgba(148, 163, 184, 0.24);
+        --text-muted: #94a3b8;
+        --accent: #38bdf8;
+        --accent-2: #a78bfa;
+    }
+
+    .stApp {
+        background:
+            radial-gradient(circle at top left, rgba(56, 189, 248, 0.20), transparent 28rem),
+            radial-gradient(circle at top right, rgba(167, 139, 250, 0.18), transparent 24rem),
+            linear-gradient(135deg, #020617 0%, #111827 48%, #0f172a 100%);
+        color: #e5e7eb;
+    }
+
+    .block-container {
+        max-width: 1180px;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
+
+    [data-testid="stSidebar"] {
+        background: rgba(2, 6, 23, 0.78);
+        border-right: 1px solid var(--border);
+    }
+
+    [data-testid="stSidebar"] * {
+        color: #e5e7eb;
+    }
+
+    .hero {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.66));
+        box-shadow: 0 24px 80px rgba(2, 6, 23, 0.34);
+        margin-bottom: 1.5rem;
+    }
+
+    .eyebrow {
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        margin-bottom: 0.45rem;
+    }
+
+    .hero-title {
+        color: #f8fafc;
+        font-size: clamp(2.2rem, 5vw, 4.1rem);
+        font-weight: 800;
+        line-height: 1;
+        margin: 0;
+    }
+
+    .hero-copy {
+        color: #cbd5e1;
+        font-size: 1.06rem;
+        line-height: 1.7;
+        max-width: 760px;
+        margin-top: 1rem;
+        margin-bottom: 0;
+    }
+
+    .panel {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.25rem;
+        background: var(--surface);
+        box-shadow: 0 18px 42px rgba(2, 6, 23, 0.22);
+        height: 100%;
+    }
+
+    .panel-title {
+        color: #f8fafc;
+        font-size: 1.05rem;
+        font-weight: 750;
+        margin-bottom: 0.9rem;
+    }
+
+    .result-card {
+        border: 1px solid rgba(56, 189, 248, 0.34);
+        border-radius: 8px;
+        padding: 1.35rem;
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(167, 139, 250, 0.11));
+        margin-bottom: 1rem;
+    }
+
+    .result-label {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 0.45rem;
+    }
+
+    .result-class {
+        color: #f8fafc;
+        font-size: clamp(2rem, 4vw, 3.3rem);
+        font-weight: 850;
+        line-height: 1;
+        margin-bottom: 0.45rem;
+    }
+
+    .confidence {
+        color: #bae6fd;
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    .top-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .top-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.9rem;
+        background: rgba(2, 6, 23, 0.35);
+    }
+
+    .top-name {
+        color: #f8fafc;
+        font-weight: 750;
+        margin-bottom: 0.2rem;
+        overflow-wrap: anywhere;
+    }
+
+    .top-score {
+        color: var(--accent);
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
+
+    div[data-testid="stFileUploader"] {
+        border: 1px dashed rgba(148, 163, 184, 0.42);
+        border-radius: 8px;
+        padding: 1rem;
+        background: rgba(15, 23, 42, 0.58);
+    }
+
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    @media (max-width: 760px) {
+        .hero {
+            padding: 1.35rem;
+        }
+
+        .top-row {
+            grid-template-columns: 1fr;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
-# ---------------- PREDICTION ----------------
+
+@st.cache_resource(show_spinner=False)
+def get_model():
+    if not os.path.exists(MODEL_FILE):
+        url = f"https://drive.google.com/uc?id={FILE_ID}"
+        gdown.download(url, MODEL_FILE, quiet=False)
+
+    return load_model(MODEL_FILE)
+
+
+with st.sidebar:
+    st.title("Vision Lab")
+    st.caption("ResNet50 classifier trained for CIFAR-10 image categories.")
+
+    st.divider()
+    st.subheader("Model")
+    st.write("Architecture: **ResNet50**")
+    st.write("Input size: **32 x 32 RGB**")
+    st.write("Dataset: **CIFAR-10**")
+
+    st.divider()
+    st.subheader("Classes")
+    st.write(" ".join(f"{CLASS_ICONS[name]} {name.title()}" for name in CLASS_NAMES))
+
+    st.divider()
+    st.success("Model ready")
+
+
+st.markdown(
+    """
+    <section class="hero">
+        <div class="eyebrow">CIFAR-10 Image Recognition</div>
+        <h1 class="hero-title">Vision Lab</h1>
+        <p class="hero-copy">
+            Upload an image and get a fast ResNet50 prediction with confidence scores,
+            top alternatives, and a full class probability breakdown.
+        </p>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+
+with st.spinner("Loading ResNet50 model..."):
+    model = get_model()
+
+upload_col, info_col = st.columns([1.15, 0.85], gap="large")
+
+with upload_col:
+    with st.container(border=True):
+        st.markdown('<div class="panel-title">Upload Image</div>', unsafe_allow_html=True)
+        uploaded_file = st.file_uploader(
+            "Choose a JPG, JPEG, or PNG image",
+            type=["jpg", "jpeg", "png"],
+            label_visibility="collapsed",
+        )
+
+        if uploaded_file is None:
+            st.info("Upload an image to run classification.")
+
+with info_col:
+    with st.container(border=True):
+        st.markdown('<div class="panel-title">How It Works</div>', unsafe_allow_html=True)
+        st.write("Images are resized to the CIFAR-10 input shape before prediction.")
+        st.write("The confidence score is the model's highest class probability.")
+        st.write("Use clear, centered images for the most reliable results.")
+
 
 if uploaded_file is not None:
-
     image = Image.open(uploaded_file).convert("RGB")
-
     resized_image = image.resize((32, 32))
-
     img_array = np.array(resized_image) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    with st.spinner("Predicting..."):
+    with st.spinner("Analyzing image..."):
         prediction = model.predict(img_array, verbose=0)
 
-    predicted_index = np.argmax(prediction)
-    predicted_class = class_names[predicted_index]
-    confidence = float(np.max(prediction))
+    probabilities = prediction[0]
+    predicted_index = int(np.argmax(probabilities))
+    predicted_class = CLASS_NAMES[predicted_index]
+    confidence = float(probabilities[predicted_index])
+    top3 = np.argsort(probabilities)[-3:][::-1]
 
-    col1, col2 = st.columns([1, 1])
+    st.markdown("<br>", unsafe_allow_html=True)
+    image_col, result_col = st.columns([0.95, 1.05], gap="large")
 
-    # IMAGE COLUMN
-    with col1:
-        st.subheader("🖼 Uploaded Image")
-        st.image(
-            image,
-            caption="Input Image",
-            use_container_width=True
-        )
+    with image_col:
+        with st.container(border=True):
+            st.markdown('<div class="panel-title">Uploaded Image</div>', unsafe_allow_html=True)
+            st.image(image, caption="Input image", use_container_width=True)
 
-    # RESULT COLUMN
-    with col2:
-        st.subheader("🎯 Prediction Result")
-
-        st.success(
-            f"Predicted Class: {predicted_class.upper()}"
-        )
-
-        st.metric(
-            label="Confidence",
-            value=f"{confidence:.2%}"
-        )
-
-        st.progress(confidence)
-
-        st.write("### 🏆 Top 3 Predictions")
-
-        top3 = np.argsort(prediction[0])[-3:][::-1]
-
-        for idx in top3:
-            st.write(
-                f"**{class_names[idx].capitalize()}** : "
-                f"{prediction[0][idx]*100:.2f}%"
+    with result_col:
+        with st.container(border=True):
+            st.markdown(
+                f"""
+                <div class="result-card">
+                    <div class="result-label">Predicted Class</div>
+                    <div class="result-class">{CLASS_ICONS[predicted_class]} {predicted_class.title()}</div>
+                    <div class="confidence">{confidence:.2%} confidence</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
+            st.progress(confidence)
 
-    # CHART
+            st.markdown('<div class="top-row">', unsafe_allow_html=True)
+            for rank, idx in enumerate(top3, start=1):
+                name = CLASS_NAMES[int(idx)]
+                score = float(probabilities[int(idx)])
+                st.markdown(
+                    f"""
+                    <div class="top-card">
+                        <div class="result-label">Top {rank}</div>
+                        <div class="top-name">{CLASS_ICONS[name]} {name.title()}</div>
+                        <div class="top-score">{score:.2%}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("---")
-
-    st.subheader("📊 Probability Distribution")
-
-    df = pd.DataFrame({
-        "Class": class_names,
-        "Probability": prediction[0]
-    })
-
-    st.bar_chart(
-        df.set_index("Class")
+    chart_df = (
+        pd.DataFrame({"Class": CLASS_NAMES, "Probability": probabilities})
+        .sort_values("Probability", ascending=True)
+        .set_index("Class")
     )
 
-# ---------------- FOOTER ----------------
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown('<div class="panel-title">Probability Distribution</div>', unsafe_allow_html=True)
+        st.bar_chart(chart_df, use_container_width=True)
 
-st.markdown("---")
 
-# st.caption(
-#     "Built with Streamlit • TensorFlow • ResNet50 • CIFAR-10"
-# )
 st.markdown(
     """
-    <p style='text-align:center; color:gray; font-size:0.9rem;'>
-        Built with Streamlit • TensorFlow • ResNet50 • CIFAR-10
+    <p style="text-align:center; color:#94a3b8; font-size:0.9rem; margin-top:2rem;">
+        Built with Streamlit, TensorFlow, ResNet50, and CIFAR-10
     </p>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
