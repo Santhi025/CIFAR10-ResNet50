@@ -1,4 +1,8 @@
+
+
+
 import os
+
 import gdown
 import numpy as np
 import pandas as pd
@@ -7,9 +11,8 @@ from PIL import Image
 from tensorflow.keras.models import load_model
 
 
-# ---------------- CONFIG ----------------
 st.set_page_config(
-    page_title="CIFAR-10 Vision Lab Pro",
+    page_title="CIFAR-10 Vision Lab",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -19,249 +22,393 @@ MODEL_FILE = "cifar10_resnet50.keras"
 FILE_ID = "1z97EwgoxXl3JnbPrhQlrV0n0jbO4grwF"
 
 CLASS_NAMES = [
-    "airplane","automobile","bird","cat","deer",
-    "dog","frog","horse","ship","truck",
+    "airplane",
+    "automobile",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck",
 ]
 
 CLASS_ICONS = {
-    "airplane":"✈️","automobile":"🚗","bird":"🐦","cat":"🐱",
-    "deer":"🦌","dog":"🐶","frog":"🐸","horse":"🐴","ship":"🚢","truck":"🚚",
+    "airplane": "✈️",
+    "automobile": "🚗",
+    "bird": "🐦",
+    "cat": "🐱",
+    "deer": "🦌",
+    "dog": "🐶",
+    "frog": "🐸",
+    "horse": "🐴",
+    "ship": "🚢",
+    "truck": "🚚",
 }
 
 
-# ---------------- MODERN UI STYLE ----------------
-st.markdown("""
-<style>
+st.markdown(
+    """
+    <style>
+    :root {
+        --surface: rgba(15, 23, 42, 0.78);
+        --surface-strong: rgba(15, 23, 42, 0.94);
+        --border: rgba(148, 163, 184, 0.24);
+        --text-muted: #94a3b8;
+        --accent: #38bdf8;
+        --accent-2: #a78bfa;
+    }
 
-/* ===== GLOBAL ===== */
-.stApp {
-    background:
-        radial-gradient(circle at 15% 10%, rgba(56,189,248,0.18), transparent 40%),
-        radial-gradient(circle at 85% 20%, rgba(167,139,250,0.18), transparent 45%),
-        linear-gradient(180deg, #050816, #0b1020);
-    color: #e5e7eb;
-    font-family: "Inter", sans-serif;
-}
+    .stApp {
+        background:
+            radial-gradient(circle at top left, rgba(56, 189, 248, 0.20), transparent 28rem),
+            radial-gradient(circle at top right, rgba(167, 139, 250, 0.18), transparent 24rem),
+            linear-gradient(135deg, #020617 0%, #111827 48%, #0f172a 100%);
+        color: #e5e7eb;
+    }
 
-.block-container {
-    max-width: 1200px;
-    padding-top: 2rem;
-}
+    .block-container {
+        max-width: 1180px;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
 
-/* ===== SIDEBAR ===== */
-[data-testid="stSidebar"] {
-    background: rgba(2,6,23,0.85);
-    border-right: 1px solid rgba(255,255,255,0.08);
-}
+    [data-testid="stSidebar"] {
+        background: rgba(2, 6, 23, 0.78);
+        border-right: 1px solid var(--border);
+    }
 
-[data-testid="stSidebar"] * {
-    color: #e5e7eb;
-}
+    [data-testid="stSidebar"] * {
+        color: #e5e7eb;
+    }
 
-/* ===== HERO ===== */
-.hero {
-    padding: 2.8rem;
-    border-radius: 24px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-    border: 1px solid rgba(255,255,255,0.10);
-    box-shadow: 0 60px 140px rgba(0,0,0,0.6);
-    margin-bottom: 1.8rem;
-    position: relative;
-    overflow: hidden;
-}
+    .hero {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.66));
+        box-shadow: 0 24px 80px rgba(2, 6, 23, 0.34);
+        margin-bottom: 1.5rem;
+    }
 
-.hero::before {
-    content:"";
-    position:absolute;
-    width:500px;
-    height:500px;
-    background: radial-gradient(circle, rgba(56,189,248,0.25), transparent 60%);
-    top:-150px;
-    right:-150px;
-}
+    .eyebrow {
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        margin-bottom: 0.45rem;
+    }
 
-.hero-title {
-    font-size: clamp(2.6rem, 5vw, 4.6rem);
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    background: linear-gradient(90deg,#fff,#7dd3fc,#a78bfa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+    .hero-title {
+        color: #f8fafc;
+        font-size: clamp(2.2rem, 5vw, 4.1rem);
+        font-weight: 800;
+        line-height: 1;
+        margin: 0;
+    }
 
-.hero-sub {
-    color: #94a3b8;
-    font-size: 1.1rem;
-    max-width: 800px;
-    margin-top: 0.8rem;
-}
+    .hero-copy {
+        color: #cbd5e1;
+        font-size: 1.06rem;
+        line-height: 1.7;
+        max-width: 760px;
+        margin-top: 1rem;
+        margin-bottom: 0;
+    }
 
-/* ===== CARDS ===== */
-.card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 18px;
-    padding: 1.2rem;
-    backdrop-filter: blur(12px);
-    transition: all 0.25s ease;
-}
+    .panel {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.25rem;
+        background: var(--surface);
+        box-shadow: 0 18px 42px rgba(2, 6, 23, 0.22);
+        height: 100%;
+    }
 
-.card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(56,189,248,0.25);
-}
+    .panel-title {
+        color: #f8fafc;
+        font-size: 1.05rem;
+        font-weight: 750;
+        margin-bottom: 0.9rem;
+    }
 
-/* ===== RESULT ===== */
-.result-card {
-    border-radius: 22px;
-    padding: 2rem;
-    background: linear-gradient(135deg, rgba(56,189,248,0.20), rgba(167,139,250,0.12));
-    border: 1px solid rgba(255,255,255,0.15);
-    box-shadow: 0 50px 120px rgba(0,0,0,0.55);
-}
+    .result-card {
+        border: 1px solid rgba(56, 189, 248, 0.34);
+        border-radius: 8px;
+        padding: 1.35rem;
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(167, 139, 250, 0.11));
+        margin-bottom: 1rem;
+    }
 
-.result-class {
-    font-size: 3.4rem;
-    font-weight: 950;
-    background: linear-gradient(90deg,#fff,#7dd3fc,#a78bfa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+    .result-label {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 0.45rem;
+    }
 
-/* ===== UPLOAD ===== */
-div[data-testid="stFileUploader"] {
-    border-radius: 18px;
-    border: 1px dashed rgba(148,163,184,0.35);
-    padding: 1.2rem;
-    background: rgba(255,255,255,0.02);
-    transition: 0.2s ease;
-}
+    .result-class {
+        color: #f8fafc;
+        font-size: clamp(2rem, 4vw, 3.3rem);
+        font-weight: 850;
+        line-height: 1;
+        margin-bottom: 0.45rem;
+    }
 
-div[data-testid="stFileUploader"]:hover {
-    border-color: rgba(56,189,248,0.5);
-}
+    .confidence {
+        color: #bae6fd;
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
 
-/* ===== TOP CARDS ===== */
-.top-card {
-    padding: 1rem;
-    border-radius: 16px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    margin-bottom: 10px;
-    transition: 0.2s;
-}
+    .top-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
 
-.top-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(167,139,250,0.3);
-}
+    .top-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.9rem;
+        background: rgba(2, 6, 23, 0.35);
+    }
 
-/* ===== DIVIDER ===== */
-.glow {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #38bdf8, #a78bfa, transparent);
-    margin: 1.5rem 0;
-}
+    .top-name {
+        color: #f8fafc;
+        font-weight: 750;
+        margin-bottom: 0.2rem;
+        overflow-wrap: anywhere;
+    }
 
-</style>
-""", unsafe_allow_html=True)
+    .top-score {
+        color: var(--accent);
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
+
+    div[data-testid="stFileUploader"] {
+        border: 1px dashed rgba(148, 163, 184, 0.42);
+        border-radius: 8px;
+        padding: 1rem;
+        background: rgba(15, 23, 42, 0.58);
+    }
+
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    @media (max-width: 760px) {
+        .hero {
+            padding: 1.35rem;
+        }
+
+        .top-row {
+            grid-template-columns: 1fr;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
-# ---------------- MODEL ----------------
-@st.cache_resource
-def load_model_cached():
+@st.cache_resource(show_spinner=False)
+def get_model():
     if not os.path.exists(MODEL_FILE):
         url = f"https://drive.google.com/uc?id={FILE_ID}"
         gdown.download(url, MODEL_FILE, quiet=False)
+
     return load_model(MODEL_FILE)
 
-model = load_model_cached()
 
-
-# ---------------- SIDEBAR ----------------
 with st.sidebar:
-    st.title("🧠 Vision Lab Pro")
-    st.caption("CIFAR-10 AI Image Classifier")
+    st.title("Vision Lab")
+    st.caption("ResNet50 classifier trained for CIFAR-10 image categories.")
 
-    st.markdown("### Classes")
-    st.write(" ".join(f"{CLASS_ICONS[c]} {c.title()}" for c in CLASS_NAMES))
+    st.divider()
+    st.subheader("Model")
+    st.write("Architecture: **ResNet50**")
+    st.write("Input size: **32 x 32 RGB**")
+    st.write("Dataset: **CIFAR-10**")
 
-    st.markdown("---")
-    st.success("Model Loaded & Ready")
+    st.divider()
+    st.subheader("Classes")
+    st.write(" ".join(f"{CLASS_ICONS[name]} {name.title()}" for name in CLASS_NAMES))
 
-
-# ---------------- HERO ----------------
-st.markdown("""
-<div class="hero">
-    <div style="color:#38bdf8; font-weight:700; font-size:0.85rem;">
-        AI IMAGE CLASSIFICATION SYSTEM
-    </div>
-    <div class="hero-title">CIFAR-10 Vision Lab</div>
-    <div class="hero-sub">
-        Upload an image and get instant AI predictions with confidence scores and top-3 analysis.
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    st.divider()
+    st.success("Model ready")
 
 
-# ---------------- UPLOAD ----------------
-uploaded_file = st.file_uploader("Drop your image here", type=["jpg","jpeg","png"])
+st.markdown(
+    """
+    <section class="hero">
+        <div class="eyebrow">CIFAR-10 Image Recognition</div>
+        <h1 class="hero-title">Vision Lab</h1>
+        <p class="hero-copy">
+            Upload an image and get a fast ResNet50 prediction with confidence scores,
+            top alternatives, and a full class probability breakdown.
+        </p>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+
+with st.spinner("Loading ResNet50 model..."):
+    model = get_model()
+
+upload_col, info_col = st.columns([1.15, 0.85], gap="large")
+
+with upload_col:
+    with st.container(border=True):
+        st.markdown('<div class="panel-title">Upload Image</div>', unsafe_allow_html=True)
+        uploaded_file = st.file_uploader(
+            "Choose a JPG, JPEG, or PNG image",
+            type=["jpg", "jpeg", "png"],
+            label_visibility="collapsed",
+        )
+
+        if uploaded_file is None:
+            st.info("Upload an image to run classification.")
+
+with info_col:
+    with st.container(border=True):
+        st.markdown('<div class="panel-title">How It Works</div>', unsafe_allow_html=True)
+        st.write("Images are resized to the CIFAR-10 input shape before prediction.")
+        st.write("The confidence score is the model's highest class probability.")
+        st.write("Use clear, centered images for the most reliable results.")
 
 
-# ---------------- INFERENCE ----------------
-if uploaded_file:
-
+if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
-    resized = image.resize((32, 32))
+    resized_image = image.resize((32, 32))
+    img_array = np.array(resized_image) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
 
-    x = np.array(resized) / 255.0
-    x = np.expand_dims(x, 0)
+    with st.spinner("Analyzing image..."):
+        prediction = model.predict(img_array, verbose=0)
 
-    with st.spinner("AI analyzing image..."):
-        preds = model.predict(x, verbose=0)[0]
+    probabilities = prediction[0]
+    predicted_index = int(np.argmax(probabilities))
+    predicted_class = CLASS_NAMES[predicted_index]
+    confidence = float(probabilities[predicted_index])
+    top3 = np.argsort(probabilities)[-3:][::-1]
 
-    idx = np.argmax(preds)
-    label = CLASS_NAMES[idx]
-    conf = float(preds[idx])
-    top3 = np.argsort(preds)[-3:][::-1]
+    st.markdown("<br>", unsafe_allow_html=True)
+    image_col, result_col = st.columns([0.95, 1.05], gap="large")
+
+    with image_col:
+        with st.container(border=True):
+            st.markdown('<div class="panel-title">Uploaded Image</div>', unsafe_allow_html=True)
+            st.image(image, caption="Input image", use_container_width=True)
+
+    with result_col:
+        with st.container(border=True):
+            st.markdown(
+                f"""
+                <div class="result-card">
+                    <div class="result-label">Predicted Class</div>
+                    <div class="result-class">{CLASS_ICONS[predicted_class]} {predicted_class.title()}</div>
+                    <div class="confidence">{confidence:.2%} confidence</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.progress(confidence)
+
+            st.markdown('<div class="top-row">', unsafe_allow_html=True)
+            for rank, idx in enumerate(top3, start=1):
+                name = CLASS_NAMES[int(idx)]
+                score = float(probabilities[int(idx)])
+                st.markdown(
+                    f"""
+                    <div class="top-card">
+                        <div class="result-label">Top {rank}</div>
+                        <div class="top-name">{CLASS_ICONS[name]} {name.title()}</div>
+                        <div class="top-score">{score:.2%}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    chart_df = (
+        pd.DataFrame({"Class": CLASS_NAMES, "Probability": probabilities})
+        .sort_values("Probability", ascending=True)
+        .set_index("Class")
+    )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown('<div class="panel-title">Probability Distribution</div>', unsafe_allow_html=True)
+        st.bar_chart(chart_df, use_container_width=True)
 
 
-    st.markdown('<div class="glow"></div>', unsafe_allow_html=True)
+st.markdown(
+    """
+    <p style="text-align:center; color:#94a3b8; font-size:0.9rem; margin-top:2rem;">
+        Built with Streamlit, TensorFlow, ResNet50, and CIFAR-10
+    </p>
+    """,
+    unsafe_allow_html=True,
+)
 
-    col1, col2 = st.columns([1,1])
+st.divider()
 
-    # IMAGE
-    with col1:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.image(image, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+st.markdown(
+    """
+    <p style="text-align:center; color:#94a3b8; font-size:0.9rem; margin-top:2rem;">
+        <a href="https://github.com/alephzero/vision-lab" target="_blank" style="color:#94a3b8;">GitHub</a>
+    </p>
+    """,
+    unsafe_allow_html=True,
+)
 
-    # RESULT
-    with col2:
-        st.markdown(f"""
-        <div class="result-card">
-            <div style="color:#94a3b8;">Prediction</div>
-            <div class="result-class">{CLASS_ICONS[label]} {label}</div>
-            <div style="color:#bae6fd; font-weight:700;">
-                Confidence: {conf:.2%}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+st.markdown(
+    """
+    <p style="text-align:center; color:#94a3b8; font-size:0.9rem; margin-top:2rem;">
+        <a href="https://twitter.com/alephzero" target="_blank" style="color:#94a3b8;">Twitter</a>
+    </p>
+    """,
+    unsafe_allow_html=True,
+)
 
-        st.progress(conf)
+st.markdown(
+    """
+    <p style="text-align:center; color:#94a3b8; font-size:0.9rem; margin-top:2rem;">
+        <a href="https://www.buymeacoffee.com/alephzero" target="_blank" style="color:#94a3b8;">Buy me a coffee</a>
+    </p>
+    """,
+    unsafe_allow_html=True,
+)
 
-        st.markdown("### Top Predictions")
+st.markdown(
+    """
+    <p style="text-align:center; color:#94a3b8; font-size:0.9rem; margin-top:2rem;">
+        <a href="https://ko-fi.com/alephzero" target="_blank" style="color:#94a3b8;">Support me on Ko-fi</a>
+    </p>
+    """,
+    unsafe_allow_html=True,
+)
 
-        for i in top3:
-            st.markdown(f"""
-            <div class="top-card">
-                <b>{CLASS_ICONS[CLASS_NAMES[i]]} {CLASS_NAMES[i].title()}</b><br>
-                <span style="color:#38bdf8; font-weight:700;">
-                    {preds[i]:.2%}
-                </span>
-            </div>
-            """, unsafe_allow_html=True)
+st.markdown(
+    """
+    <p style="text-align:center; color:#94a3b8; font-size:0.9rem; margin-top:2rem;">
+        <a href="https://github.com/alephzero/vision-lab/blob/main/LICENSE" target="_blank" style="color:#94a3b8;">MIT License</a>
+    </p>
+    """,
+    unsafe_allow_html=True,
+)
 
-
-else:
-    st.info("Upload an image to start AI prediction 🚀")
+st.markdown(
+    """
+    <p style="text-align:center; color:#94a3b8; font-size:0.9rem; margin-top:2rem;">
+        <a href="https://github.com/alephzero/vision-lab/blob/main/CONTRIBUTING.md" target="_blank" style="color:#94a3b8;">Contributing</a>
+    </p>
+    """,
+    unsafe_allow_html=True,
+)
